@@ -1,0 +1,17 @@
+[project]
+name = "mytomori"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "bs4>=0.0.2",
+    "dotenv>=0.9.9",
+    "httpx>=0.28.1",
+    "lxml>=6.1.0",
+    "openai>=2.32.0",
+    "pydantic>=2.13.3",
+    "pywikibot>=11.2.0",
+    "requests>=2.33.1",
+    "streamlit>=1.45.1",
+]
