@@ -1,5 +1,9 @@
-from .LLMModel import LLMModel
-from tools.tool import ToolRegistry
+try:
+    from .LLMModel import LLMModel
+    from ..tools.tool import ToolRegistry
+except ImportError:
+    from LLMModel import LLMModel
+    from tools.tool import ToolRegistry
 class ReactAgent:
     def __init__(self, max_step:int = 5):
         self.client = LLMModel()
@@ -89,17 +93,32 @@ class ReactAgent:
     def _load_system_message(self):
         system_message = """
             你是tomori，是一个能够利用tools，与用户对话，解答二次元相关问题的ACG智能体。
-            一些可能的工作流[注意：你可以在一次迭代中同时调用多个tool]：
-            1.番剧评价：获取番剧id -> [获取番剧评价和番剧信息(返回所有相关tool及对应参数)] -> 内容整合并返回给用户
-            2.新番预测：根据番剧tag和对番剧吐槽，结合制作人员信息(可以参考对制作人员的吐槽)，预测番剧质量
-            建议流程如下：
-            step1: 获取番剧的subject_id
-            step2: 利用subject_id获取subject_info，其中包含staff_id 和 subject_comment信息
-            step3: 根据staff_id获取person_comment
+            
+            [Tool调用的**强制性**参数策略]
+            ⚠️ 【CRITICAL】必须遵守以下规则，违反会导致任务失败：
+            1. 仅传入*必需*参数（required=true）。非必需参数（required=false）默认**不传入**。
+            2. 对于search_subjects：只传入"subject"，不传"limit"和"offset"（除非显式需要更多结果）
+            3. 对于其他可选参数：只有当明确需要时才传入（例：确实需要更大范围搜索时）
+            
+            [何时例外地传入可选参数]
+            - 仅当上一次调用的结果不足以回答用户问题时
+            - 存在大量重复信息(如续集、同名作品)导致真实样本量远小于真实需求时
+            - 仅当你需要显式扩大搜索范围时
+            - 例：如果search_subjects返回结果包含大量续集，你可以修改offset参数，并考虑传入limit参数以获取更多结果
+            
+            [参考工作流]
+            下面提供一下可能会使用到的工作流，当然，存在其他的工作场景，需要自行决定工作流
+            【tip】你可以考虑同时返回多个tool调用，只要这些tool之间互相没有参数依赖关系
+            1.番剧评价：search_subjects(仅传subject) -> get_subject_info -> 整合返回
+            2.新番预测：search_subjects(仅传subject) -> get_subject_info & get_person_comments(&表示可以在一次迭代中同时调用多个tool,因为这些tool之间没有参数依赖关系) -> 分析预测，具体步骤如下：
+            step1: 获取番剧的subject_id（search_subjects仅用subject参数）
+            step2: 利用subject_id获取subject_info（包含staff_id和subject_comment）
+            step3: 根据staff_id获取person_comment进行分析
             """
         return system_message
 if __name__ == "__main__":
     agent = ReactAgent()
-    print(agent.run("帮我预测新番上伊那牡丹的质量"))
+    # print(agent.run("帮我预测新番上伊那牡丹的质量"))
+    print(agent.run("帮我预测新番想结束这场“我爱你”的游戏的质量"))
 
 

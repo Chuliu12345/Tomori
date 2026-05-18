@@ -1,6 +1,6 @@
 import contextlib
 import io
-import tools  # noqa: F401
+import src.tools as tools  # noqa: F401
 from src.agent.ReactAgent import ReactAgent
 
 
